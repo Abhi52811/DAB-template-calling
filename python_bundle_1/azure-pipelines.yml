@@ -1,0 +1,51 @@
+trigger: none  # Manual trigger to control deployments
+
+variables:
+  - group: Databricks_Variables  
+
+stages:
+  - stage: Build
+    displayName: "Build & Publish Artifacts"
+    jobs:
+      - job: Databricks_CI
+        displayName: "Run Databricks Build"
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - task: PublishPipelineArtifact@1
+            displayName: "Publish Repository Artifacts"
+            inputs:
+              targetPath: '$(System.DefaultWorkingDirectory)/python_bundle_1'  
+              artifact: 'python_bundle_1_artifact'
+              publishLocation: 'pipeline'
+
+# Deploy to multiple environments in sequence
+  - stage: Deploy_Dev
+    displayName: "Deploy to Dev"
+    dependsOn: Build
+    jobs:
+      - template: ../Deployment_template/deploy-template.yml
+        parameters:
+          environment: dev
+          databricksHost: $(databricks_dev_host)
+          atifactName: python_bundle_1_artifact
+
+  - stage: Deploy_UAT
+    displayName: "Deploy to UAT"
+    dependsOn: Deploy_Dev
+    jobs:
+      - template: ../Deployment_template/deploy-template.yml
+        parameters:
+          environment: uat
+          databricksHost: $(databricks_uat_host)
+          atifactName: python_bundle_1_artifact
+
+  - stage: Deploy_Prod
+    displayName: "Deploy to Prod"
+    dependsOn: Deploy_UAT
+    jobs:
+      - template: ../Deployment_template/deploy-template.yml
+        parameters:
+          environment: prod
+          databricksHost: $(databricks_prod_host)
+          atifactName: python_bundle_1_artifact

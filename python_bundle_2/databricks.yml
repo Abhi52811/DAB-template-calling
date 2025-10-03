@@ -1,0 +1,38 @@
+bundle:
+  name: python_bundle_2
+  uuid: 8bd91a53-d011-4fd9-a685-052783d9e781
+
+include:
+  - resources/*.yml
+
+targets:
+  dev:
+    mode: development
+    default: true
+    workspace:
+      host: https://adb-72050752643286.6.azuredatabricks.net
+      root_path: ~/Workspace/Users/abhishek.gupta1@celebaltech.com/.bundle/${bundle.name}/${bundle.target}
+    run_as:
+        service_principal_name: '87f10b50-aaee-4a95-ba70-1731861be038'
+
+  uat:
+    mode: production
+    workspace:
+      host: https://adb-3465533698645911.11.azuredatabricks.net
+      root_path: /Workspace/Users/abhishek.gupta1@celebaltech.com/.bundle/${bundle.name}/${bundle.target}
+    permissions:
+      - user_name: abhishek.gupta1@celebaltech.com
+        level: CAN_MANAGE
+    run_as:
+        service_principal_name: '87f10b50-aaee-4a95-ba70-1731861be038'
+  
+  prod:
+    mode: production
+    workspace:
+      host: https://adb-3185791404033233.13.azuredatabricks.net
+      root_path: /Workspace/Users/abhishek.gupta1@celebaltech.com/.bundle/${bundle.name}/${bundle.target}
+    permissions:
+      - user_name: abhishek.gupta1@celebaltech.com
+        level: CAN_MANAGE
+    run_as:
+        service_principal_name: '87f10b50-aaee-4a95-ba70-1731861be038'

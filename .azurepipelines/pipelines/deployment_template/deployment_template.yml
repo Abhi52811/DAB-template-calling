@@ -1,0 +1,71 @@
+parameters:
+  - name: environment
+    type: string
+  - name: databricksHost
+    type: string
+  - name: atifactName
+    type: string
+
+
+jobs:
+  - deployment: DeployADBNotebooks
+    displayName: "Validate & Deploy Databricks Notebooks - ${{ parameters.environment }}"
+    pool:
+      vmImage: 'ubuntu-latest'
+    environment: ${{ parameters.environment }}
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+            - task: DownloadPipelineArtifact@2
+              displayName: "Download Repository Artifacts"
+              inputs:
+                buildType: 'current'
+                artifactName: ${{ parameters.atifactName }}
+                targetPath: '$(System.DefaultWorkingDirectory)/python_bundle_1'
+
+            - script: |
+                  curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
+              displayName: 'Ensure Databricks CLI is Installed'
+            
+            # - script: |
+            #     cd $(Pipeline.Workspace)/${{ parameters.atifactName }}
+            #     echo Validating Databricks bundle for ${{ parameters.environment }}
+            #     export DATABRICKS_HOST=${{ parameters.databricksHost }}
+            #     export DATABRICKS_TOKEN=$(az account get-access-token --tenant e4e34038-ea1f-4882-b6e8-ccd776459ca0 --resource 2ff814a6-3304-4ab8-85cb-cd0e6f879c1d --query accessToken -o tsv)
+            #     databricks bundle validate -t ${{ parameters.environment }}
+            #   displayName: "Validate Databricks Bundle"
+
+            - task: AzureCLI@2
+              inputs:
+                azureSubscription: 'test-mi'  # Azure subscription for authentication.
+                scriptType: 'bash'
+                scriptLocation: 'inlineScript'
+                inlineScript: |
+                  cd $(Pipeline.Workspace)/${{ parameters.atifactName }}
+                  echo Validating Databricks bundle for ${{ parameters.environment }}
+                  export DATABRICKS_HOST=${{ parameters.databricksHost }}
+                  export DATABRICKS_TOKEN=$(az account get-access-token --tenant e4e34038-ea1f-4882-b6e8-ccd776459ca0 --resource 2ff814a6-3304-4ab8-85cb-cd0e6f879c1d --query accessToken -o tsv)
+                  databricks bundle validate -t ${{ parameters.environment }}
+              displayName: 'Validate Databricks Bundle'
+
+            # - script: |
+            #     cd $(Pipeline.Workspace)/${{ parameters.atifactName }}
+            #     echo Deploying Databricks bundle to ${{ parameters.environment }}
+            #     export DATABRICKS_HOST=${{ parameters.databricksHost }}
+            #     export DATABRICKS_TOKEN=$(az account get-access-token --tenant e4e34038-ea1f-4882-b6e8-ccd776459ca0 --resource 2ff814a6-3304-4ab8-85cb-cd0e6f879c1d --query accessToken -o tsv)
+            #     databricks bundle deploy -t ${{ parameters.environment }}
+            #   displayName: "Deploy Databricks Bundle"
+
+            - task: AzureCLI@2
+              inputs:
+                azureSubscription: 'test-mi'  # Azure subscription for authentication.
+                scriptType: 'bash'
+                scriptLocation: 'inlineScript'
+                inlineScript: |
+                  cd $(Pipeline.Workspace)/${{ parameters.atifactName }}
+                  echo Deploying Databricks bundle to ${{ parameters.environment }}
+                  export DATABRICKS_HOST=${{ parameters.databricksHost }}
+                  export DATABRICKS_TOKEN=$(az account get-access-token --tenant e4e34038-ea1f-4882-b6e8-ccd776459ca0 --resource 2ff814a6-3304-4ab8-85cb-cd0e6f879c1d --query accessToken -o tsv)
+                  databricks bundle deploy -t ${{ parameters.environment }}
+              displayName: 'Deploy Databricks Bundle'
